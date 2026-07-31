@@ -1,0 +1,21 @@
+{
+  "name": "ccswitch",
+  "version": "0.1.0",
+  "description": "Troca automática de conta Claude Code quando o limite de uso chega perto, com notificação nativa do macOS.",
+  "type": "module",
+  "bin": {
+    "ccswitch": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/cli.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.0"
+  }
+}
