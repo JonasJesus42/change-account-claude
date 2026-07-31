@@ -1,0 +1,9 @@
+node_modules/
+dist/
+
+# Nunca commitar credenciais. O store real fica em ~/.config/ccswitch/,
+# mas cobrimos qualquer cópia local por segurança.
+accounts.json
+*.credentials.json
+.credentials.json
+.context/
