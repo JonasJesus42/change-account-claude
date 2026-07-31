@@ -16,6 +16,8 @@ export interface Account {
   label: string;
   credentials: CredentialBlob;
   addedAt: string;
+  /** Último uso conhecido — salvo quando a conta era ativa. Evita chamadas desnecessárias à API. */
+  lastUsage?: Usage & { savedAt: string };
 }
 
 /** Formato do arquivo ~/.config/ccswitch/accounts.json. */
