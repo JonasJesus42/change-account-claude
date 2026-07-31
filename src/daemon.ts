@@ -58,6 +58,13 @@ async function tick(warned: Set<string>): Promise<void> {
     return;
   }
 
+  // Persiste o último uso conhecido da conta ativa — usado por outras contas inativas.
+  const activeAccount = store.find(s, s.activeLabel);
+  if (activeAccount) {
+    activeAccount.lastUsage = { ...usage, savedAt: new Date().toISOString() };
+    store.save(s);
+  }
+
   const { worstPct, worstWindow, resetsAt, severity } = usage;
   const breakdown = `sessão ${usage.fiveHourPct}% · semana ${usage.sevenDayPct}%`;
   console.log(`[ccswitch] ${s.activeLabel}: ${breakdown} (severity=${severity})`);

@@ -19,10 +19,11 @@ function hhmm(iso: string | null): string {
   });
 }
 
-function usageStr(u?: Usage, err?: string): string {
+function usageStr(u?: Usage & { savedAt?: string }, err?: string): string {
   if (err) return `erro: ${err}`;
   if (!u) return "—";
-  return `sessão ${String(u.fiveHourPct).padStart(3)}%  ·  semana ${String(u.sevenDayPct).padStart(3)}%  (reset ${u.worstWindow} ${hhmm(u.resetsAt)})`;
+  const tag = u.savedAt ? ` [salvo ${hhmm(u.savedAt)}]` : "";
+  return `sessão ${String(u.fiveHourPct).padStart(3)}%  ·  semana ${String(u.sevenDayPct).padStart(3)}%  (reset ${u.worstWindow} ${hhmm(u.resetsAt)})${tag}`;
 }
 
 function requireLabel(label: string | undefined, cmd: string): string {

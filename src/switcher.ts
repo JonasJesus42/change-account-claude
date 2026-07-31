@@ -43,21 +43,47 @@ export interface AccountUsage {
   error?: string;
 }
 
-/** Consulta o uso de todas as contas do store em sequência com delay entre elas.
- *  Sequencial (não paralelo) evita disparar múltiplas requests simultâneas e
- *  causar 429. O cache de 90s garante que repetições sejam grátis. */
+/**
+ * Retorna o uso de todas as contas. Para contas inativas com `lastUsage` salvo
+ * e `resetsAt` ainda no futuro, usa o dado local sem bater na API — evita 401
+ * de tokens inválidos e 429 por excesso de chamadas.
+ * Só faz chamada à API para a conta ativa ou contas cujo reset já passou.
+ */
 export async function usageForAll(s: Store): Promise<AccountUsage[]> {
   const results: AccountUsage[] = [];
+  const now = new Date();
+
   for (const account of s.accounts) {
+    const isActive = account.label === s.activeLabel;
+
+    if (!isActive) {
+      // Conta inativa: nunca bate na API.
+      // Se tem dado salvo e reset não chegou → usa dado local.
+      // Se não tem dado salvo → "aguardando monitoramento" (evita 401/429 desnecessário).
+      if (account.lastUsage) {
+        results.push({ account, usage: account.lastUsage });
+      } else {
+        results.push({ account, error: "sem dados salvos (conta ainda não foi monitorada ativa)" });
+      }
+      continue;
+    }
+
+    // Só bate na API para a conta ATIVA.
     try {
       const usage = await fetchUsage(account.credentials.claudeAiOauth.accessToken);
       results.push({ account, usage });
     } catch (e) {
-      results.push({ account, error: (e as Error).message });
+      if (account.lastUsage) {
+        results.push({ account, usage: account.lastUsage });
+      } else {
+        results.push({ account, error: (e as Error).message });
+      }
     }
-    // Pequena pausa entre contas pra não saturar o endpoint.
-    if (s.accounts.indexOf(account) < s.accounts.length - 1) {
-      await new Promise((r) => setTimeout(r, 500));
+
+    // Pausa só quando há próxima conta que vai bater na API.
+    const idx = s.accounts.indexOf(account);
+    if (idx < s.accounts.length - 1) {
+      await new Promise((r) => setTimeout(r, 300));
     }
   }
   return results;
