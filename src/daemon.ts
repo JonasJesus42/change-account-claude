@@ -16,10 +16,20 @@ function hhmm(iso: string | null | undefined): string {
 
 /** Envia uma mensagem de "oi" via claude CLI pra aquecer a sessão após troca. */
 function warmup(): void {
-  // Roda em background — não bloqueia o daemon.
-  execFile("claude", ["--print", "oi"], { timeout: 30_000 }, (err) => {
+  // LaunchAgent tem PATH limitado — procura o binário em locais comuns.
+  const candidates = [
+    "/opt/homebrew/bin/claude",
+    "/usr/local/bin/claude",
+    process.env.HOME ? `${process.env.HOME}/.npm-global/bin/claude` : "",
+  ].filter(Boolean);
+
+  const bin = candidates.find((p) => {
+    try { return require("node:fs").existsSync(p); } catch { return false; }
+  }) ?? "claude";
+
+  execFile(bin, ["--print", "oi"], { timeout: 30_000 }, (err) => {
     if (err) console.warn("[ccswitch] warmup falhou (não crítico):", err.message);
-    else console.log("[ccswitch] warmup enviado com sucesso.");
+    else console.log("[ccswitch] warmup enviado.");
   });
 }
 
